@@ -8,7 +8,7 @@ The database is managed via [SQLModel](https://sqlmodel.tiangolo.com/) (a layer 
 
 ## 📊 Diagram
 
-![Sentinel ER Diagram](./er-diagram.png)
+![Sentinel ER Diagram](./uml-diagram.png)
 
 ---
 
