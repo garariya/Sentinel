@@ -2,39 +2,6 @@
 
 This directory contains visual design assets for the Sentinel brand.
 
-## 📁 Directory Structure
-
-```
-design-assets/
-├── logos/
-│   ├── logo-full.svg          # Full logo with wordmark
-│   ├── logo-icon.svg          # Icon only
-│   ├── logo-monochrome.svg    # Single color version
-│   └── logo-inverse.svg       # Light version for dark BG
-│
-├── icons/
-│   ├── app-icon/
-│   │   ├── icon-1024.png      # macOS app icon
-│   │   ├── icon-512.png       
-│   │   ├── icon-256.png
-│   │   └── icon.icns          # macOS bundle
-│   │
-│   └── web/
-│       ├── favicon-32x32.png
-│       ├── favicon-16x16.png
-│       └── apple-touch-icon.png
-│
-├── ui-components/
-│   ├── buttons.svg            # Button component variations
-│   ├── cards.svg              # Card component styles
-│   └── inputs.svg             # Input field styles
-│
-└── mockups/
-    ├── dashboard-desktop.png  # Desktop UI mockup
-    ├── dashboard-mobile.png   # Mobile UI mockup
-    └── cli-demo.png           # CLI screenshot
-```
-
 ## 🎨 Logo Design Brief
 
 ### Primary Logo Concept: "Shield Circuit"
