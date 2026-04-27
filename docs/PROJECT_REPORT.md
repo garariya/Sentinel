@@ -23,22 +23,94 @@ As digital storage capacities grow, users accumulate thousands of files, leading
 - **Accessibility:** Provide multiple interfaces (CLI, Web Dashboard, Desktop App) to cater to different user preferences.
 
 ## 5. System Architecture
-Sentinel operates on a modular architecture divided into several key layers:
+Sentinel operates on a modular architecture divided into several key layers. The following diagram illustrates the high-level architecture and how different components interact:
 
-- **User Interfaces:**
-  - **Web UI:** A responsive React/Next.js dashboard for visual plan reviews and analytics.
-  - **CLI:** A fast, terminal-based interface using Typer and Rich.
-  - **Desktop App:** A native Tauri-based application for seamless OS integration.
-- **API Layer:** FastAPI with WebSockets for real-time communication between the UI and the Core Engine.
-- **Core Engine:**
-  - **Scanner:** Reads the file system and calculates file hashes.
-  - **File Classifier:** Identifies file types and detects duplicates.
-  - **Rules Engine:** Applies standard and user-defined rules.
-  - **AI Planner:** Communicates with the local Ollama LLM to generate organization plans.
-  - **Safety Validator:** A critical component that reviews the AI's plan to prevent unsafe operations (e.g., modifying system directories).
-  - **Executor:** The deterministic engine that performs the approved actions and logs them for potential undos.
+```mermaid
+graph TB
+    subgraph "User Interfaces"
+        CLI[CLI - Typer]
+        WEB[Web UI - Next.js]
+        DESKTOP[Desktop - Tauri]
+    end
+    
+    subgraph "API Layer"
+        API[FastAPI + WebSockets]
+    end
+    
+    subgraph "Core Engine"
+        SCANNER[Scanner]
+        CLASSIFIER[File Classifier]
+        RULES[Rules Engine]
+        PLANNER[AI Planner]
+        SAFETY[Safety Validator]
+        EXECUTOR[Executor]
+    end
+    
+    subgraph "External Services"
+        OLLAMA[Ollama - Local LLM]
+        DB[(SQLite DB)]
+    end
+    
+    CLI --> API
+    WEB --> API
+    DESKTOP --> API
+    
+    API --> SCANNER
+    SCANNER --> CLASSIFIER
+    CLASSIFIER --> RULES
+    RULES --> PLANNER
+    PLANNER --> OLLAMA
+    PLANNER --> SAFETY
+    SAFETY --> EXECUTOR
+    
+    EXECUTOR --> DB
+    SCANNER --> DB
+    
+    style SAFETY fill:#ff6b6b,stroke:#333,stroke-width:2px
+    style EXECUTOR fill:#51cf66,stroke:#333,stroke-width:2px
+    style PLANNER fill:#339af0,stroke:#333,stroke-width:2px
+```
 
 ## 6. Core Modules & Workflow
+
+Sentinel follows a strict execution flow from user request to final file movement. The sequence diagram below shows this workflow:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant WebUI as Web UI / CLI
+    participant API as FastAPI Backend
+    participant Scanner
+    participant AI as AI Planner (Local LLM)
+    participant Safety as Safety Validator
+    participant Executor
+    participant DB as Database (SQLite)
+
+    User->>WebUI: Request "Clean Folder"
+    WebUI->>API: API Request: Scan & Plan
+    API->>Scanner: Invoke Scan
+    Scanner-->>Scanner: Read files & collect stats
+    Scanner-->>API: Return FileMetadata[]
+    API->>AI: Send FileMetadata for organization
+    AI-->>AI: Generate JSON plan based on context
+    AI-->>API: Return Intended Plan
+    API->>Safety: Send Intended Plan for validation
+    Safety-->>Safety: Check paths against blocklists
+    Safety-->>API: Return Approved Plan
+    API-->>WebUI: Return Safe Plan for Review
+    WebUI-->>User: Present suggestions interactively
+    User->>WebUI: Click "Execute Plan"
+    WebUI->>API: Execute verified tasks
+    API->>Executor: Send Approved Plan to execute
+    Executor-->>Executor: Move/Rename/Delete (to trash)
+    Executor->>DB: Write detailed Audit Logs
+    DB-->>Executor: Confirm Log Writes
+    Executor-->>API: Execution Result
+    API-->>WebUI: Task Completed
+    WebUI-->>User: Refresh Local Dashboard
+```
+
 1. **Scanning:** The user initiates a scan on a specific directory. The Scanner traverses the directory and computes hashes for duplicate detection.
 2. **Classification:** The File Classifier categorizes each file based on its metadata and extension.
 3. **Planning:** The AI Planner processes the classified data and generates a structured JSON plan suggesting moves, archives, and deletions.
